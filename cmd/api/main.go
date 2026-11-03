@@ -1,19 +1,16 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"net/http"
+
+	"github.com/muhammadasad70/goauth/internal/handler"
 )
 
 func main() {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /health", healthHandler)
-	fmt.Println("Server running on the port 8080")
-	http.ListenAndServe(":8080", mux)
-}
-
-func healthHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("GoAuth api is running "))
+	mux.HandleFunc("GET /health", handler.HealthHandler)
+	log.Println("Server running on the port 8080")
+	log.Fatal(http.ListenAndServe(":8080", mux))
 }
