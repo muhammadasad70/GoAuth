@@ -17,7 +17,7 @@ func NewUserRepository(db *pgxpool.Pool) *Userrepository {
 	}
 }
 
-func (r *Userrepository) Crateuser(ctx context.Context, email string, passwordHash string) (int64, error) {
+func (r *Userrepository) CreateUser(ctx context.Context, email string, passwordHash string) (int64, error) {
 	query := `
 		INSERT INTO users(email,password_hash)
 		VALUE($1,$2)
