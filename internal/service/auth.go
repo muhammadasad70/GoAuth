@@ -34,7 +34,7 @@ func NewAuthService(repo UserRepository) *AuthService {
 	}
 
 }
-func (s *AuthService) Registeruser(
+func (s *AuthService) RegisterUser(
 	ctx context.Context,
 	email string,
 	passwordHash string,
