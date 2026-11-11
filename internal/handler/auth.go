@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/muhammadasad70/goauth/internal/service"
@@ -53,10 +54,11 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, service.ErrInvalidEmail) ||
 			errors.Is(err, service.ErrInvalidPassword) ||
-			errors.Is(err, service.ErrInvalidPassword) {
+			errors.Is(err, service.ErrPasswordTooLong) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		log.Println("Registration failed: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}

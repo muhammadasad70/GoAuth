@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/muhammadasad70/goauth/internal/model"
 )
 
 type Userrepository struct {
@@ -20,7 +21,7 @@ func NewUserRepository(db *pgxpool.Pool) *Userrepository {
 func (r *Userrepository) CreateUser(ctx context.Context, email string, passwordHash string) (int64, error) {
 	query := `
 		INSERT INTO users(email,password_hash)
-		VALUE($1,$2)
+		VALUES($1,$2)
 		RETURNING Id
 	`
 	var userID int64
@@ -35,4 +36,24 @@ func (r *Userrepository) CreateUser(ctx context.Context, email string, passwordH
 	}
 	return userID, nil
 
+}
+func (r *Userrepository) GetUserByEmail(ctx context.Context, email string) (model.User, error) {
+	query := `
+		SELECT id,email,password_hash,created_at
+		FROM public.users
+		WHERE email=$1
+	`
+	var user model.User
+
+	err := r.db.QueryRow(ctx, query, email).Scan(
+		&user.ID,
+		&user.Email,
+		&user.PasswordHash,
+
+		&user.CreatedAt,
+	)
+	if err != nil {
+		return model.User{}, fmt.Errorf("get user by email: %w", err)
+	}
+	return user, nil
 }
