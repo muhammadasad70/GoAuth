@@ -42,6 +42,7 @@ func main() {
 
 	mux.HandleFunc("GET /health", handler.HealthHandler)
 	mux.HandleFunc("POST /register", authHandler.Register)
+	mux.HandleFunc("POST /login", authHandler.Login)
 
 	log.Println("Server running on the port", cfg.Port)
 	log.Fatal(http.ListenAndServe(":"+cfg.Port, mux))
