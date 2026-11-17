@@ -9,6 +9,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/muhammadasad70/goauth/internal/model"
+	"github.com/muhammadasad70/goauth/internal/token"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -18,6 +19,11 @@ var (
 	ErrPasswordTooLong    = errors.New("password exceeds bcrypt limit")
 	ErrInvalidCredentials = errors.New("invalid email and password")
 )
+
+type LoginResult struct {
+	UserID       int64
+	AccesseToken string
+}
 
 type UserRepository interface {
 	CreateUser(
@@ -34,12 +40,14 @@ type UserRepository interface {
 	) (model.User, error)
 }
 type AuthService struct {
-	repo UserRepository
+	repo      UserRepository
+	jwtSecret []byte
 }
 
-func NewAuthService(repo UserRepository) *AuthService {
+func NewAuthService(repo UserRepository, jwtSecret []byte) *AuthService {
 	return &AuthService{
-		repo: repo,
+		repo:      repo,
+		jwtSecret: jwtSecret,
 	}
 
 }
@@ -88,15 +96,15 @@ func (s *AuthService) LoginUser(
 	ctx context.Context,
 	email string,
 	password string,
-) (int64, error) {
+) (LoginResult, error) {
 	email = strings.TrimSpace(email)
 
 	user, err := s.repo.GetUserByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return 0, ErrInvalidCredentials
+			return LoginResult{}, ErrInvalidCredentials
 		}
-		return 0, fmt.Errorf("login user: %w", err)
+		return LoginResult{}, fmt.Errorf("login user: %w", err)
 	}
 
 	err = bcrypt.CompareHashAndPassword(
@@ -105,10 +113,20 @@ func (s *AuthService) LoginUser(
 	)
 	if err != nil {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
-			return 0, ErrInvalidCredentials
+			return LoginResult{}, ErrInvalidCredentials
 		}
-		return 0, fmt.Errorf("verify user: %w", err)
+		return LoginResult{}, fmt.Errorf("verify user: %w", err)
 	}
-	return user.ID, nil
+	accessToken, err := token.GenerateAccessToken(
+		user.ID,
+		s.jwtSecret,
+	)
+	if err != nil {
+		return LoginResult{}, fmt.Errorf("generate access token: %w", err)
+	}
+	return LoginResult{
+		UserID:       user.ID,
+		AccesseToken: accessToken,
+	}, nil
 
 }

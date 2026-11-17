@@ -31,10 +31,15 @@ func main() {
 	}
 	defer pool.Close()
 	log.Println("Successfully connected to PostgreSQL")
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if len(jwtSecret) < 32 {
+		log.Fatal("JWT_SECRET must contain at least 32 bytes")
+
+	}
 
 	userRepo := repository.NewUserRepository(pool)
 
-	authService := service.NewAuthService(userRepo)
+	authService := service.NewAuthService(userRepo, []byte(jwtSecret))
 
 	authHandler := handler.NewAuthHandler(authService)
 

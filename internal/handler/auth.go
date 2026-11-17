@@ -36,7 +36,7 @@ type AuthService interface {
 		ctx context.Context,
 		email string,
 		password string,
-	) (int64, error)
+	) (service.LoginResult, error)
 }
 type AuthHandler struct {
 	service AuthService
@@ -91,7 +91,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 
 	}
-	userID, err := h.service.LoginUser(
+	result, err := h.service.LoginUser(
 		r.Context(),
 		req.Email,
 		req.Password,
@@ -107,8 +107,10 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	}
 	response := map[string]interface{}{
-		"user_id": userID,
-		"message": "Login successfully",
+		"user_id":      result.UserID,
+		"access_token": result.AccesseToken,
+		"token_type":   "Bearer",
+		"expire_in":    900,
 	}
 	w.Header().Set("Content-Type", "Application/json")
 	json.NewEncoder(w).Encode(response)
